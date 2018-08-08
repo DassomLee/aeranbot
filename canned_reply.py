@@ -1,21 +1,21 @@
-import random
-import re
+import random # random이라는 모듈을 불러옴
+import re #정규표현식을 활용할 것이므로 불러옴
 from urllib.parse import quote
 
 import requests
 
-import secret
+import secret # secret은 토큰같은 것. 숨겨둔 머시기
 
-generals = {
-    r'.*\b주사위.*': [
-        lambda g: '주사위를 던졌습니다 => ' + str(random.randint(1, 6)),
+generals = {  # 'generals'라는 dictionary를 생성함
+    r'.*\b주사위.*': [ # '이주사위'라는 단어는 포함되지 않도록, 어절로 띄어쓸 때를 위해서 '\b주사위'로 표현함
+        lambda g: '주사위를 던졌습니다 => ' + str(random.randint(1, 6)),  # lambda를 사용하는데, str으로 1-6 중 하나를 고름
     ],
     r'.*\b동전.*': [
-        lambda g: '동전을 던졌습니다 => ' + random.choice(
+        lambda g: '동전을 던졌습니다 => ' + random.choice(  # choice는 가중치를 줄 수 없음. 다섯 번 곱해줘서 리스트 안에서 확률을 높여줌
             ['앞면', '뒷면'] * 5 + ['옆면!?', '사라졌다!']
         ),
     ],
-    r'(.+?)(이?랑|하고|와|과|,)\s+(.+?)((가|이|이?랑|하고| 중).+)?\?$': [
+    r'(.+?)(이?랑|하고|와|과|,)\s+(.+?)((가|이|이?랑|하고| 중).+)?\?$': [  #
         lambda g: random.choice([
             g[0],
             g[2],
@@ -31,7 +31,7 @@ generals = {
         '다른 분들은 어떻게 생각하세요?',
         '난 모르겠어.',
     ],
-    r'(.+?)\s+(vs|VS|Vs)\.?\s*(.+?)$': [
+    r'(.+?)\s+(vs|VS|Vs)\.?\s*(.+?)$': [ # versus 다음에 dot이 올 수 있을 수도 있고 없을 수도 있음 --> 꼼꼼왕!!
         lambda g: random.choice([
             g[0],
             g[2],
@@ -49,13 +49,13 @@ generals = {
 
 mentions = {
     r'.*주소검색\s?\:(.+)$': [
-        lambda g: search_naver(g[0].strip())
+        lambda g: search_naver(g[0].strip())  # strip은 양쪽 공백을 없애주는 것. r strip: 오른쪽 공백, l strip: 왼쪽 공백. enter와 띄어쓰기를 없애줌
     ],
     r'.*이름이\s+(뭐|모|뭔)(야|니|냐|에요|예요|가|가요)?\?$': [
         '내 이름은 애란봇이야. 사실은 시리보다 똑똑하지.',
         '애란봇입니다 :)',
     ],
-    r'.*?(\S+[겠랬렸샀았었웠있했켰])(다|여요?|어요?)[!\.]*?$': [
+    r'.*?(\S+[겠랬렸샀았었웠있했켰])(다|여요?|어요?)[!\.]*?$': [  # !는 다른 기능이 없음. \로 문자임을 표시해주지 않아도 됨. escape 안해도 되는 것
         '정말?',
         '그랬구나.',
         'ㅇㅇ',
@@ -83,17 +83,17 @@ mentions = {
 }
 
 
-def reply_to_pattern(text, pattern_map):
+def reply_to_pattern(text, pattern_map):  # 함수의 매개변수가 text, pattern_map
     for pattern, replies in pattern_map.items():
-        m = re.match(pattern, text)
-        if m:
+        m = re.match(pattern, text)  # pattern과 text가 match되면 뽑아서 m에 넣음
+        if m:  # m:은 true이면~
             reply = random.choice(replies)
-            if type(reply) == str:
+            if type(reply) == str:  # 아니면~. reply의 type이 str이면
                 return reply
             else:
                 return reply(m.groups())
     return None
-
+# match, search, find 세가지 종류가 있음. 각 차이점은?
 
 def search_naver(keyword):
     encoded_keyword = quote(keyword.encode('utf-8'))
